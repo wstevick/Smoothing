@@ -240,19 +240,25 @@ def load_channel_data(make_plot=False):
     except FileNotFoundError:
         pass
 
-    channel_data = pd.DataFrame(columns=["values"])
+    channel_data = pd.DataFrame(columns=["values", "time"])
 
     with h5py.File("Gamma/210601_NBS295-106/20210601_152616_mass-001.hdf5") as f:
         for key in f.keys():  # noqa: SIM118
-            channel_data.loc[int(key.removeprefix("chan")), "values"] = np.array(
+            chan = int(key.removeprefix("chan"))
+            channel_data.loc[chan, "values"] = np.array(
                 f[key]["filt_value"]
             )
+            channel_data.loc[chan, "time"] = np.array(f[key]["timestamp"])
 
     channel_data.sort_index(inplace=True)
 
-    for idx, [values] in channel_data.iterrows():
-        values = values[values > 0]  # noqa: PLW2901
-        channel_data.loc[idx, "values"] = values[values < np.percentile(values, 99)]
+    for idx, [values, time] in channel_data.iterrows():
+        gt0mask = values > 0
+        values = values[gt0mask]  # noqa: PLW2901
+        time = time[gt0mask]
+        lt99thmask = values < np.percentile(values, 99)
+        channel_data.loc[idx, "values"] = values[lt99thmask]
+        channel_data.loc[idx, "time"] = time[lt99thmask]
 
     channel_data["median"] = channel_data["values"].apply(np.median)
     channel_data["count"] = channel_data["values"].apply(len)
