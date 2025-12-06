@@ -5,17 +5,22 @@ import pickle
 from scipy.interpolate import make_interp_spline
 import matplotlib.pyplot as plt
 import numpy as np
-from PS5 import load_channel_data
-
-# %%
-with open('peaks1.pickle', 'rb') as f:
-    peaks1, hist, bins = pickle.load(f)
-
-plt.step(bins, hist, where='mid')
-
+from PS5 import load_channel_data, normal_binify, my_peaks,linear_guass
+from scipy.optimize import curve_fit
 # %%
 channel_data = load_channel_data()
+hist, bins = normal_binify(channel_data.loc[1, 'values'])
+peaks1, _ = my_peaks(hist, bins, n=0)
+with open('peaks1.pickle', 'wb') as f:
+   pickle.dump((pd.DataFrame(peaks1, columns=['center', 'height', 'std', 'offset', 'slope']), hist, bins), f)
+# %%
+with open('peaks1.pickle', 'rb') as f:
+   peaks1, hist, bins = pickle.load(f)
 
+plt.step(bins, hist, where='mid')
+plt.xlim(7000,7600)
+# %%
+channel_data = load_channel_data()
 peak = peaks1.loc[peaks1['height'].idxmax()]
 values1 = channel_data.loc[1, 'values']
 times1 = channel_data.loc[1, 'time']
@@ -101,3 +106,33 @@ interpolated_shifts = np.array(interpolated_shifts)
 
 # %%
 adjusted_values = values1 + interpolated_shifts
+adjhist, adjbins = normal_binify(adjusted_values)
+plt.step(adjbins, adjhist, where='mid')
+plt.xlim(7000,7600)
+# %%
+peak['center']
+# %%
+snrs = []
+for peakid, peak in peaks1.sort_values('height', ascending=False)[:50].iterrows():
+    snr = peak['center'] / peak['std']
+    #print(f"{peakid} SNR:", snr)
+    snrs.append(snr)
+    
+# %%
+adjpeaks1, _ = my_peaks(adjhist, adjbins, n=0)
+#%%
+adjpeaks1 = pd.DataFrame(adjpeaks1, columns=['center', 'height', 'std', 'offset', 'slope'])
+adjpeak = adjpeaks1.loc[adjpeaks1['height'].idxmax()]
+adjpeak
+# %%'
+adjsnrs = []
+for adjpeakid, adjpeak in adjpeaks1.sort_values('height', ascending=False)[:50].iterrows():
+    adjsnr = adjpeak['center'] / adjpeak['std']
+    #print(f"{adjpeakid} SNR:",adjsnr)
+    adjsnrs.append(adjsnr)
+    
+# %%
+plt.hist(snrs, color='red', alpha = 0.5)
+plt.hist(adjsnrs, color = 'blue')
+
+#density over time
