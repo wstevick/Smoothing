@@ -245,9 +245,7 @@ def load_channel_data(make_plot=False):
     with h5py.File("Gamma/210601_NBS295-106/20210601_152616_mass-001.hdf5") as f:
         for key in f.keys():  # noqa: SIM118
             chan = int(key.removeprefix("chan"))
-            channel_data.loc[chan, "values"] = np.array(
-                f[key]["filt_value"]
-            )
+            channel_data.loc[chan, "values"] = np.array(f[key]["filt_value"])
             channel_data.loc[chan, "time"] = np.array(f[key]["timestamp"])
 
     channel_data.sort_index(inplace=True)
