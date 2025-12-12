@@ -13,12 +13,14 @@ hist, bins = normal_binify(channel_data.loc[1, 'values'])
 peaks1, _ = my_peaks(hist, bins, n=0)
 with open('peaks1.pickle', 'wb') as f:
    pickle.dump((pd.DataFrame(peaks1, columns=['center', 'height', 'std', 'offset', 'slope']), hist, bins), f)
+   
 # %%
 with open('peaks1.pickle', 'rb') as f:
    peaks1, hist, bins = pickle.load(f)
 
 plt.step(bins, hist, where='mid')
 plt.xlim(7000,7600)
+
 # %%
 channel_data = load_channel_data()
 peak = peaks1.loc[peaks1['height'].idxmax()]
@@ -30,6 +32,7 @@ in_peak_values = values1[in_peak_mask]
 in_peak_times = times1[in_peak_mask]
 in_peak_values = in_peak_values[:-int(.02 * len(in_peak_values))]
 in_peak_times = in_peak_times[:-int(.02 * len(in_peak_times))]
+
 
 # %%
 plt.scatter(in_peak_times, in_peak_values, marker='.', color='black')
@@ -47,6 +50,7 @@ for alpha in [0, 5, 8, 10]:
 
 plt.legend()
 
+
 # %%
 plt.scatter(in_peak_times, in_peak_values, marker='.', color='black')
 
@@ -60,10 +64,12 @@ yfit = model.predict(tfit)
 
 plt.plot(tfit, yfit, lw=5)
 
+
 # %%
 y_smoothed = model.predict(in_peak_times)
 y_start = y_smoothed[:int(.05 * len(y_smoothed))].mean()
 plt.scatter(in_peak_times, y_start+in_peak_values-y_smoothed, color='black', marker='.')
+
 
 # %%
 corrections = pd.DataFrame(columns=['center', 'y_start', 'model'])
@@ -88,6 +94,8 @@ for (_, peak), ax in zip(peaks1.iloc[peaks1['height'].argsort()[-10:]].iterrows(
 fig.set_size_inches(10, 20)
 fig.tight_layout()
 
+
+
 # %%
 corrections['recommended_shift'] = corrections.apply(
     lambda cor: cor['y_start']
@@ -104,13 +112,16 @@ for point_shifts, value in zip(recommended_shifts_by_all_peaks, values1):
 
 interpolated_shifts = np.array(interpolated_shifts)
 
+
 # %%
 adjusted_values = values1 + interpolated_shifts
 adjhist, adjbins = normal_binify(adjusted_values)
 plt.step(adjbins, adjhist, where='mid')
-plt.xlim(7000,7600)
+#plt.xlim(7000,7600)
+
 # %%
 peak['center']
+
 # %%
 snrs = []
 for peakid, peak in peaks1.sort_values('height', ascending=False)[:50].iterrows():
@@ -118,12 +129,14 @@ for peakid, peak in peaks1.sort_values('height', ascending=False)[:50].iterrows(
     #print(f"{peakid} SNR:", snr)
     snrs.append(snr)
     
+    
 # %%
 adjpeaks1, _ = my_peaks(adjhist, adjbins, n=0)
+
 #%%
 adjpeaks1 = pd.DataFrame(adjpeaks1, columns=['center', 'height', 'std', 'offset', 'slope'])
 adjpeak = adjpeaks1.loc[adjpeaks1['height'].idxmax()]
-adjpeak
+adjpeaks1
 # %%'
 adjsnrs = []
 for adjpeakid, adjpeak in adjpeaks1.sort_values('height', ascending=False)[:50].iterrows():
@@ -131,8 +144,35 @@ for adjpeakid, adjpeak in adjpeaks1.sort_values('height', ascending=False)[:50].
     #print(f"{adjpeakid} SNR:",adjsnr)
     adjsnrs.append(adjsnr)
     
+    
 # %%
 plt.hist(snrs, color='red', alpha = 0.5)
 plt.hist(adjsnrs, color = 'blue')
 
 #density over time
+
+#%%
+file_path = 'adjpeaks1.pkl'
+adjpeaks1.to_pickle(file_path)
+print(f"\nDataFrame successfully pickled to '{file_path}'")
+
+
+plt.scatter(snrs, adjsnrs)
+#plt.hist(dtwsnrs, color = 'blue', density = True, label='DTW Corrected SNR')
+plt.title('Histogram of SNR values')
+plt.xlabel('Pre Corrected Value')
+plt.ylabel("Super Smoother corrected Value")
+plt.xscale('log')
+plt.yscale('log')
+xs=np.linspace(0,max(snrs))
+plt.plot(xs,xs, color ='black')
+#plt.legend()
+# %%
+import statistics
+adjmean = statistics.mean(adjsnrs)
+print(round(adjmean,2))
+
+premean = statistics.mean(snrs)
+print(round(premean,2))
+
+((adjmean - premean) / premean)* 100
