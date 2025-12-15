@@ -160,6 +160,17 @@ for peakid, peak in peaks1.sort_values("height", ascending=False)[:50].iterrows(
     snrs.append(snr)
 
 # %%
+try:
+    with open("adjpeaks1.pkl", "rb") as f:
+        adjpeaks1, adjhist, adjbins = pickle.load(f)
+except FileNotFoundError:
+    adjhist, adjbins = normal_binify(adjusted_values)
+    adjpeaks1, _ = my_peaks(adjhist, adjbins, n=0)
+    adjpeaks1 = pd.DataFrame(
+        adjpeaks1, columns=["center", "height", "std", "offset", "slope"]
+    ).sort_values("height")
+    with open("adjpeaks1.pkl", "wb") as f:
+        pickle.dump((adjpeaks1, adjhist, adjbins), f)
 plt.step(adjbins, adjhist, where="mid")
 
 # %%
@@ -189,9 +200,9 @@ print(f"\nDataFrame successfully pickled to '{file_path}'")
 
 plt.scatter(snrs, adjsnrs)
 # plt.hist(dtwsnrs, color = 'blue', density = True, label='DTW Corrected SNR')
-plt.title("Histogram of SNR values")
+#plt.title("Histogram of SNR values")
 plt.xlabel("Pre Corrected Value")
-plt.ylabel("Super Smoother corrected Value")
+plt.ylabel("Supsmu Corrected Value")
 plt.xscale("log")
 plt.yscale("log")
 xs = np.linspace(0, max(snrs))
