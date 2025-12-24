@@ -200,7 +200,7 @@ print(f"\nDataFrame successfully pickled to '{file_path}'")
 
 plt.scatter(snrs, adjsnrs)
 # plt.hist(dtwsnrs, color = 'blue', density = True, label='DTW Corrected SNR')
-#plt.title("Histogram of SNR values")
+# plt.title("Histogram of SNR values")
 plt.xlabel("Pre Corrected Value")
 plt.ylabel("Supsmu Corrected Value")
 plt.xscale("log")

@@ -81,13 +81,13 @@ def my_peaks(hist, bins, n=10):
         sigma_guess = (bins[right] - bins[left]) / 2
 
         # rise over run
-        slope_guess = (hist[right] - hist[left]) / 2 / sigma_guess
+        slope_guess = (hist[right] - hist[left]) / (2 * sigma_guess)
         offset_guess = max((hist[right] + hist[left]) / 2, 0)
         height_guess = max(hist[index] - offset_guess, 0)
 
         # fit the section of the curve  at what we currently think is 3 sigma on each side
-        window_left = max(int(index - left_shift * 3), 0)
-        window_right = min(int(index + right_shift * 3) + 1, len(bins))
+        window_left = max(index - left_shift * 3, 0)
+        window_right = min(index + right_shift * 3 + 1, len(bins))
 
         if window_right - window_left >= 5:  # noqa: PLR2004
             xdata = bins[window_left:window_right]
